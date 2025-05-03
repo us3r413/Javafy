@@ -25,10 +25,17 @@ public class SoundTrack {
         String musicList = "";
         int i=1, s = currentIndex+1;
         for (Music music : musicTracks) {
-            musicList = musicList.concat(((i==s)?">>":"  ")+i+". "+music.getMusicName() + "by "+ music.getArtist()+"\n");
+            musicList = musicList.concat(((i==s)?">>":"  ")+i+". "+music.getMusicName() + " by "+ music.getArtist()+"\n");
             i++;
         }
         return musicList;
+    }
+    public Music lastTrack(){
+        if (musicTracks.isEmpty()) {
+            return null;
+        }
+        currentIndex = (currentIndex - 1 + musicTracks.size()) % musicTracks.size(); // Circular decrement
+        return musicTracks.get(currentIndex);
     }
     public Music nextTrack() {
         if (musicTracks.isEmpty()) {

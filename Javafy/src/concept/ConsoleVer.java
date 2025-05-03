@@ -2,7 +2,6 @@ package src.concept;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import java.util.Scanner;
-
 public class ConsoleVer extends Application {
     public MusicPlayer mp;
     @Override
@@ -10,16 +9,19 @@ public class ConsoleVer extends Application {
         Core core = new Core();
         new Thread(() -> {
             Scanner sc = new Scanner(System.in);
+            mp = new MusicPlayer(core.fullTrack.nextTrack());
             while (true) {
                 System.out.print(">> ");
                 String cmd = sc.nextLine().trim().toLowerCase();
-                mp = new MusicPlayer(core.fullTrack.nextTrack());
                 switch (cmd) {
                     case "load" -> {
                         System.out.print("Music name >> ");
                         String name = sc.nextLine().trim().toLowerCase();
                         Music music = core.fullTrack.findMusicByName(name);
-                        mp = new MusicPlayer(music);
+                        if(music != null) {
+                            mp.terminate();
+                            mp = new MusicPlayer(music);
+                        }
                     }
                     case "next" -> {
                         mp.terminate();

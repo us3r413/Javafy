@@ -5,8 +5,8 @@ import java.io.File;
 
 public class Core {
     public SoundTrack fullTrack;
-    SoundTrack loadedTrack = null;
-    Core(){
+    public SoundTrack customTrack = null;
+    public Core(){
         this.fullTrack = new SoundTrack("allMusic");
         File folder = new File("music/");
         File[] listOfFiles = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".mp3"));
@@ -33,5 +33,8 @@ public class Core {
             );
             this.fullTrack.addMusic(music);
         }
+    }
+    public void loadCustomTrack(SoundTrack track){
+        this.customTrack = track;
     }
 }
