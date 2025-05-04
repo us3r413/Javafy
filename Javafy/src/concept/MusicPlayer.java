@@ -46,7 +46,26 @@ public class MusicPlayer {
     public void terminate(){
         mp3Player.stop();
     }
+    public double getProgress() {
+        return mp3Player.getCurrentTime().toMillis() / mp3Player.getTotalDuration().toMillis();
+    }
+    public double getCurrentTime(){
+        return mp3Player.getCurrentTime().toMillis();
+    }
+    public void setPosition(double progress){
+        try {
+            mp3Player.seek(mp3Player.getTotalDuration().multiply(progress));
+        }catch (Exception e){
+            System.out.println("Problem setting position " + music.getMusicName() + ": " + e.getMessage());
+        }
+    }
+    public Double getTotalDuration() {
+        return mp3Player.getTotalDuration().toMillis();
+    }
     public void setOnMusicEndListener(OnMusicFinishedListener listener) {
         this.listener = listener;
+    }
+    public Boolean isPlaying() {
+        return mp3Player.getStatus() == MediaPlayer.Status.PLAYING;
     }
 }

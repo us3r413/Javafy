@@ -15,20 +15,10 @@ public class Core {
         }
         assert listOfFiles != null;
         for(File file:listOfFiles){
-            double durationInSeconds = 0.0;
-//            try {
-//                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
-//                AudioFormat format = audioInputStream.getFormat();
-//                long frames = audioInputStream.getFrameLength();
-//                durationInSeconds = (frames + 0.0) / format.getFrameRate();
-//            } catch (Exception e) {
-//                System.err.println("Error reading file: " + file.getAbsolutePath());
-//                durationInSeconds = 0.0;
-//            }
             Music music = new Music(
                     file.getName().replace(".mp3", ""),
                     file.getAbsolutePath(),
-                    durationInSeconds,
+                    0.0,
                     "N/A"
             );
             this.fullTrack.addMusic(music);

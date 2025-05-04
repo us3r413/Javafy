@@ -59,5 +59,8 @@ public class SoundTrack {
         }
         return null;
     }
+    public double getDuration() {
+        return musicTracks.get(currentIndex).getDuration();
+    }
 
 }
