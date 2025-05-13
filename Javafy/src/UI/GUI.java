@@ -2,40 +2,64 @@ package src.UI;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
-import java.awt.image.ImageProducer;
 import java.io.File;
 import java.io.IOException;
 
+
+import com.formdev.flatlaf.FlatDarkLaf;
 import src.concept.MusicPlayer;
 import src.concept.Core;
 import src.concept.Music;
 
+
+
 public class GUI extends JFrame {
-    private static JFrame frame;
+    public static JFrame frame;
     private JButton startPause;
     private JButton next;
     private JButton last;
     private JPanel musiControl;
+    private JPanel sideSelctor;
+    private JPanel middle;
+    private JPanel everything;
     private JSlider progressBar;
     private Timer progressTimer;
     private MusicPlayer player;
     private Core core;
+    private ChatBox chat;
+    private MusicList mainList;
+    private Icon playIcon = null;
+    private Icon pauseIcon = null;
+    private Icon nextIcon = null;
+    private Icon lastIcon = null;
     private boolean latch = false;
     private boolean latch2 = false;
     public GUI(){
-        setTitle("Javafy");
-        setSize(800, 600);
-        Icon playIcon = new ImageIcon("imgs/play.png");
-        Icon pauseIcon = new ImageIcon("imgs/pause.png");
-        Icon nextIcon = new ImageIcon("imgs/next.png");
-        Icon lastIcon = new ImageIcon("imgs/last.png");
+        frame = new JFrame();
+        frame.setTitle("Javafy");
+        frame.setSize(800, 600);
+        FlatDarkLaf.setup();
+        JFrame.setDefaultLookAndFeelDecorated(true);
+        frame.getRootPane().putClientProperty("JRootPane.titleBarBackground", Color.black);
+        frame.getRootPane().putClientProperty("JRootPane.titleBarForeground", Color.white);
+        try {
+            playIcon = new ImageIcon(SVGToImageConverter.convertSVGToImage("imgs/play.svg"));
+            pauseIcon = new ImageIcon(SVGToImageConverter.convertSVGToImage("imgs/pause.svg"));
+            nextIcon = new ImageIcon(SVGToImageConverter.convertSVGToImage("imgs/next.svg"));
+            lastIcon = new ImageIcon(SVGToImageConverter.convertSVGToImage("imgs/last.svg"));
+        }catch (Exception e) {
+            JOptionPane.showMessageDialog(null,
+                    "Error converting SVG to image",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+        chat = new ChatBox();
+        mainList = new MusicList();
         core = new Core();
+        middle = chat.thisThing;
         progressBar = new JSlider(0,1000,0);
         progressBar.setUI(new CustomSlider(progressBar));
         progressBar.setValue(0);
@@ -61,7 +85,7 @@ public class GUI extends JFrame {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 int mouseX = e.getX();
-                int progressBarValue = (int) Math.round(((double) mouseX / progressBar.getWidth()) * progressBar.getMaximum());
+                int progressBarValue = (int) Math.round(((double) mouseX / progressBar.getWidth())*1000);
                 progressBar.setValue(progressBarValue);
                 player.setPosition(progressBarValue / 1000.0);
             }
@@ -121,11 +145,46 @@ public class GUI extends JFrame {
         musiControl.add(trackControl);
         musiControl.add(progressBar);
 
-        JPanel everything = new JPanel(new BorderLayout());
+        Dimension size = new Dimension(150, 30);
+        JButton chatMode = new JButton(new AbstractAction("chat") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (middle != null && middle.getParent() != null) {
+                    middle.getParent().remove(middle);
+                }
+                middle = chat.thisThing;
+                everything.add(middle, BorderLayout.CENTER);
+                everything.revalidate();
+                everything.repaint();
+            }
+        });
+        JButton allMusic = new JButton(new AbstractAction("music") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (middle != null && middle.getParent() != null) {
+                    middle.getParent().remove(middle);
+                }
+                middle = mainList.thisThing;
+                everything.add(middle, BorderLayout.CENTER);
+                everything.revalidate();
+                everything.repaint();
+            }
+        });
+        setSize(chatMode,size);
+        setSize(allMusic,size);
+        sideSelctor = new JPanel();
+        sideSelctor.setBackground(Color.BLACK);
+        sideSelctor .setLayout(new BoxLayout(sideSelctor, BoxLayout.Y_AXIS));
+        sideSelctor.add(chatMode);
+        sideSelctor.add(allMusic);
+
+        everything = new JPanel(new BorderLayout());
         everything.add(musiControl, BorderLayout.SOUTH);
-        add(everything);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        everything.add(middle, BorderLayout.CENTER);
+        everything.add(sideSelctor,BorderLayout.WEST);
+        frame.add(everything);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
     }
     private void start(){
         if(player == null) {
@@ -168,7 +227,18 @@ public class GUI extends JFrame {
     private Icon resizeIcon(String path, int width, int height) {
         BufferedImage img = null;
         try {
-            img = ImageIO.read(new File(path));
+            if (path.endsWith(".svg")) {
+                try {
+                    img = SVGToImageConverter.convertSVGToImage(path);
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(null,
+                            "Error converting SVG to image",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                img = ImageIO.read(new File(path));
+            }
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null,
                     "Error reading GUI images",
@@ -191,13 +261,18 @@ public class GUI extends JFrame {
             }
             BufferedImage tempImage = new BufferedImage(currentWidth, currentHeight, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2d = tempImage.createGraphics();
-            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             //g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_DEFAULT);
             g2d.drawImage(currentImage, 0, 0, currentWidth, currentHeight, null);
             g2d.dispose();
             currentImage = tempImage;
         }
         return new ImageIcon(currentImage);
+    }
+    private void setSize(JButton thisThing,Dimension size){
+        thisThing.setPreferredSize(size);
+        thisThing.setMinimumSize(size);
+        thisThing.setMaximumSize(size);
     }
     private void updateProgressBar() {
         if (player != null && player.isPlaying()) {
