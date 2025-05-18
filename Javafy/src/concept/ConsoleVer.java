@@ -9,7 +9,7 @@ public class ConsoleVer extends Application {
         Core core = new Core();
         new Thread(() -> {
             Scanner sc = new Scanner(System.in);
-            mp = new MusicPlayer(core.fullTrack.nextTrack());
+            mp = new MusicPlayer(core.getFullTrack().nextTrack());
             while (true) {
                 System.out.print(">> ");
                 String cmd = sc.nextLine().trim().toLowerCase();
@@ -17,7 +17,7 @@ public class ConsoleVer extends Application {
                     case "load" -> {
                         System.out.print("Music name >> ");
                         String name = sc.nextLine().trim().toLowerCase();
-                        Music music = core.fullTrack.findMusicByName(name);
+                        Music music = core.getFullTrack().findMusicByName(name);
                         if(music != null) {
                             mp.terminate();
                             mp = new MusicPlayer(music);
@@ -25,10 +25,10 @@ public class ConsoleVer extends Application {
                     }
                     case "next" -> {
                         mp.terminate();
-                        mp = new MusicPlayer(core.fullTrack.nextTrack());
+                        mp = new MusicPlayer(core.getFullTrack().nextTrack());
                     }
                     case "list" -> {
-                        System.out.println(core.fullTrack.getMusicList());
+                        System.out.println(core.getFullTrack().getMusicList());
                     }
                     case "play" -> {
                         if(mp == null) {

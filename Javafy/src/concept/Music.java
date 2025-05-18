@@ -1,5 +1,7 @@
 package src.concept;
 
+import java.util.Objects;
+
 public class Music {
     private final String musicName;
     private final String filePath;
@@ -26,5 +28,17 @@ public class Music {
 
     public String getMusicName() {
         return musicName;
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Music music = (Music) o;
+        return music.getFilePath().equals(filePath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(filePath);
     }
 }

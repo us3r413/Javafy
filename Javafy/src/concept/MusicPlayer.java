@@ -68,4 +68,18 @@ public class MusicPlayer {
     public Boolean isPlaying() {
         return mp3Player.getStatus() == MediaPlayer.Status.PLAYING;
     }
+    public void setVolume(double volume) {
+        if (mp3Player != null) {
+            mp3Player.setVolume(Math.max(0.0, Math.min(1.0, volume)));
+        }
+    }
+    public double getVolume() {
+        if (mp3Player != null) {
+            return mp3Player.getVolume();
+        }
+        return 0.0;
+    }
+    public String getMusicName() {
+        return music.getMusicName();
+    }
 }
