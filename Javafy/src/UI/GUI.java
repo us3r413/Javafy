@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
+import javax.swing.border.LineBorder;
 
 
 import com.formdev.flatlaf.FlatDarkLaf;
@@ -18,7 +18,7 @@ import src.concept.Music;
 import src.concept.SoundTrack;
 
 
-public class GUI extends JFrame {
+public class GUI {
     public static JFrame frame;
     private JLabel name;
     private JButton startPause;
@@ -278,12 +278,22 @@ public class GUI extends JFrame {
         sideSelctor.add(addTrack);
         sideSelctor.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         everything = new JPanel(new BorderLayout());
+        everything.add(new MenuBar(),BorderLayout.PAGE_START);
         everything.add(musiControl, BorderLayout.SOUTH);
         everything.add(middle, BorderLayout.CENTER);
         everything.add(sideSelctor,BorderLayout.WEST);
+        everything.setBorder(new LineBorder(Color.BLACK, 5));
         frame.add(everything);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         frame.setLocationRelativeTo(null);
+        frame.setUndecorated(true);
+
+
+        ComponentResizer cr = new ComponentResizer();
+        cr.setMinimumSize(new Dimension(1000,700));
+        cr.registerComponent(frame);
+        cr.setSnapSize(new Dimension(5, 5));
     }
     private void start(){
         if(player == null) {
@@ -494,10 +504,12 @@ public class GUI extends JFrame {
             }
         }
     }
+
     public void markChangeAsInternal() {
         lastInternalChange = System.currentTimeMillis();
     }
     public boolean isInternalChange() {
         return System.currentTimeMillis() - lastInternalChange < 1000;
     }
+
 }
