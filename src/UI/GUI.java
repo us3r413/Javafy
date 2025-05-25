@@ -2,13 +2,13 @@ package src.UI;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import javax.swing.border.LineBorder;
 
 
 import com.formdev.flatlaf.FlatDarkLaf;
@@ -18,10 +18,9 @@ import src.concept.Music;
 import src.concept.SoundTrack;
 
 
-public class GUI extends JFrame {
+public class GUI {
     public static JFrame frame;
     private JLabel name;
-    private JLabel time;
     private JButton startPause;
     private JButton next;
     private JButton last;
@@ -68,17 +67,14 @@ public class GUI extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
         }
         name = new JLabel("");
-        time = new JLabel("00:00 / 00:00");
         name.setPreferredSize(new Dimension(200,30));
         name.setOpaque(true);
         name.setBackground(Color.BLACK);
         name.setBorder(BorderFactory.createEmptyBorder(0,40,0,40));
-        time.setPreferredSize(new Dimension(200,20));
-        time.setBorder(BorderFactory.createEmptyBorder(0,40,0,40));
+        chat = new ChatBox();
         core = new Core();
         otherTrack = new ArrayList<>();
         currentTrack = core.getFullTrack();
-        chat = new ChatBox(core.getFullTrack());
         middle = chat.thisThing;
         progressBar = new JSlider(0,1000,0);
         progressBar.setUI(new CustomSlider(progressBar));
@@ -173,7 +169,7 @@ public class GUI extends JFrame {
         last.setBorderPainted(false);
         last.setFocusPainted(false);
         last.setIcon(lastIcon);
-        progressTimer = new Timer(200, e -> {
+        progressTimer = new Timer(1000, e -> {
             updateProgressBar();
         });
         progressTimer.start();
@@ -182,12 +178,10 @@ public class GUI extends JFrame {
         trackControl.add(last);
         trackControl.add(startPause);
         trackControl.add(next);
-        JPanel info = new JPanel(new GridLayout(2,1));
-        info.setBackground(Color.BLACK);
-        info.add(name);
-        info.add(time);
+
+
         trackControl.setBackground(Color.BLACK);
-        controlBar.add(info, BorderLayout.WEST);
+        controlBar.add(name, BorderLayout.WEST);
         controlBar.add(trackControl, BorderLayout.CENTER);
         controlBar.add(volumeBar, BorderLayout.EAST);
         progressBar.setBackground(Color.BLACK);
@@ -239,7 +233,7 @@ public class GUI extends JFrame {
             JButton newButton = new JButton(trackName);
             core.addEmptyTrack(trackName);
             CustomTrackList newList = new CustomTrackList(
-                    otherTrack.size(), core.getOthers().getLast(), newButton, this::loadMusic, this::deleteTrack, this::renameTrack, this::deleteMusicfromTrack
+                    otherTrack.size(), core.getOthers().getLast(), newButton, this::loadMusic, this::deleteTrack, this::renameTrack
             );
             otherTrack.add(newList);
             int idx = otherTrack.size() - 1;
@@ -267,7 +261,7 @@ public class GUI extends JFrame {
         for(SoundTrack track : core.getOthers()){
             JButton newButton = new JButton(track.getTrackName());
             int idx = otherTrack.size();
-            CustomTrackList newList = new CustomTrackList(idx, track, newButton, this::loadMusic,this::deleteTrack, this::renameTrack, this::deleteMusicfromTrack);
+            CustomTrackList newList = new CustomTrackList(idx, track, newButton, this::loadMusic,this::deleteTrack, this::renameTrack);
             otherTrack.add(newList);
             newButton.addActionListener(k ->{
                 if (middle != null && middle.getParent() != null) {
@@ -291,21 +285,18 @@ public class GUI extends JFrame {
         everything.setBorder(new LineBorder(Color.BLACK, 5));
         frame.add(everything);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         frame.setLocationRelativeTo(null);
         frame.setUndecorated(true);
-        try {
-            Image logo = SVGToImageConverter.convertSVGToImage("imgs/Icon.svg");
-            frame.setIconImage(logo);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-        ComponentResizer cr = new ComponentResizer(); //resize the window
-        cr.setMinimumSize(new Dimension(900,600));
+
+
+        ComponentResizer cr = new ComponentResizer();
+        cr.setMinimumSize(new Dimension(1000,700));
         cr.registerComponent(frame);
         cr.setSnapSize(new Dimension(5, 5));
     }
     private void start(){
-        if(!player.isLoaded()) {
+        if(player == null) {
             JOptionPane.showMessageDialog(null,
                     "Music not loaded",
                     "Error",
@@ -317,12 +308,6 @@ public class GUI extends JFrame {
     }
     private void pause(){
         try {
-            if(!player.isLoaded()) {
-                JOptionPane.showMessageDialog(null,
-                        "Music not loaded",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
             player.pause();
             latch2 = false;
         }catch (Exception e){
@@ -333,13 +318,6 @@ public class GUI extends JFrame {
         }
     }
     private void initializePlayer(Music music) {
-        if(music == null) {
-            JOptionPane.showMessageDialog(null,
-                    "No music loaded",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
         player = new MusicPlayer(music);
         player.setVolume(volumeBar.getValue() / 1000.0);
         player.setOnMusicEndListener(this::playNextTrack);
@@ -416,13 +394,9 @@ public class GUI extends JFrame {
         thisThing.setMaximumSize(size);
     }
     private void updateProgressBar() {
-        if (player.isLoaded() && player.isPlaying()) {
+        if (player != null && player.isPlaying()) {
             double progress = player.getProgress();
             progressBar.setValue((int) (progress * 1000));
-
-            time.setText(
-                    getMinutesAndSeconds(player.getCurrentTimeInSeconds()) + " / " + getMinutesAndSeconds(player.getTotalDurationInSeconds())
-            );
         }
     }
     private void updateVolumeBar() {
@@ -437,7 +411,7 @@ public class GUI extends JFrame {
         }
     }
     private void updateName(){
-        if (player.isLoaded()) {
+        if (player != null) {
             name.setText(this.player.getMusicName());
         } else {
             name.setText("No music loaded");
@@ -524,35 +498,18 @@ public class GUI extends JFrame {
                 markChangeAsInternal();
                 core.writeOtherstoJSON();
                 CustomTrackList updated = new CustomTrackList(
-                        idx,newTrack,otherTrack.get(idx).getBut(), this::loadMusic, this::deleteTrack, this::renameTrack, this::deleteMusicfromTrack
+                        idx,newTrack,otherTrack.get(idx).getBut(), this::loadMusic, this::deleteTrack, this::renameTrack
                 );
                 otherTrack.set(idx, updated);
             }
         }
     }
+
     public void markChangeAsInternal() {
         lastInternalChange = System.currentTimeMillis();
     }
     public boolean isInternalChange() {
         return System.currentTimeMillis() - lastInternalChange < 1000;
     }
-    public void deleteMusicfromTrack(SoundTrack track, Music music){
-        int response = JOptionPane.showConfirmDialog(null,
-                "Are you sure you want to delete this music?",
-                "Delete Music",
-                JOptionPane.YES_NO_OPTION);
-        if (response == JOptionPane.YES_OPTION) {
-            markChangeAsInternal();
-            core.deleteMusicFromTrack(track, music);
-            core.writeOtherstoJSON();
-            initializePlayer(core.getFullTrack().getFirstTrack());
-        }
 
-
-    }
-    public String getMinutesAndSeconds(int seconds) {
-        int minutes = (int) seconds / 60;
-        int secs = (int) seconds % 60;
-        return String.format("%02d:%02d", minutes, secs);
-    }
 }
