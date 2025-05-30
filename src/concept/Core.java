@@ -161,4 +161,23 @@ public class Core {
         }
         readMusicFromJSON();
     }
+    public void reload() {
+        this.fullTrack = new SoundTrack("allMusic");
+        this.others = new ArrayList<>();
+        File folder = new File("music/");
+        File[] listOfFiles = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".mp3"));
+        if (listOfFiles == null) {
+            System.err.println("No MP3 files found or path invalid.");
+        }
+        assert listOfFiles != null;
+        for(File file:listOfFiles){
+            Music music = new Music(
+                    file.getName().replace(".mp3", ""),
+                    file.getAbsolutePath(),
+                    0.0,
+                    "N/A"
+            );
+            this.fullTrack.addMusic(music);
+        }
+    }
 }

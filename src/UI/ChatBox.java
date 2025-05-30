@@ -4,7 +4,7 @@ import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
+
 
 import src.AdvConnect.*;
 import src.concept.Music;
@@ -89,6 +89,10 @@ public class ChatBox {
                         options,
                         options[0]
                 );
+                String[] option2 = new String[host.getClientCount()];
+                for(int i = 0; i < host.getClientCount(); i++){
+                    option2[i] = host.getClients().get(i).getUsername();
+                }
                 if(selected != null){
                     String user = (String) JOptionPane.showInputDialog(
                             null,
@@ -96,8 +100,8 @@ public class ChatBox {
                             "Send MP3",
                             JOptionPane.PLAIN_MESSAGE,
                             null,
-                            host.getClients().toArray(new UsersforHost[0]),
-                            host.getClients().getFirst().getUsername()
+                            option2,
+                            option2[0]
                     );
                     if(user != null) {
                         Music music = musicList.findMusicByName(selected);
@@ -117,6 +121,72 @@ public class ChatBox {
                         JOptionPane.showMessageDialog(
                                 null,
                                 "No user selected",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
+            } else if (isActive && !isHost && client != null) {
+                if(client.getOtherUsers().isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                            null,
+                            "You are not connected to any host",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+                String[] options = new String[musicList.getSize()];
+                for(int i = 0; i < musicList.getSize(); i++){
+                    options[i] = musicList.getMusic(i).getMusicName();
+                }
+                String selected = (String) JOptionPane.showInputDialog(
+                        null,
+                        "Select a music file to send",
+                        "Send MP3",
+                        JOptionPane.PLAIN_MESSAGE,
+                        null,
+                        options,
+                        options[0]
+                );
+                if(selected != null){
+                    Music music = musicList.findMusicByName(selected);
+                    if(music != null) {
+                        String user = (String) JOptionPane.showInputDialog(
+                                null,
+                                "Select a music file to send",
+                                "Send MP3",
+                                JOptionPane.PLAIN_MESSAGE,
+                                null,
+                                client.getOtherUsers().toArray(new String[0]),
+                                client.getOtherUsers().getFirst()
+                        );
+                        if(user != null) {
+                            int idx = client.getOtherUsers().indexOf(user);
+                            if (idx != -1) {
+                                display.append("Sending...\n");
+                                client.sendMP3toOthers(idx, music.getFilePath());
+                                display.append("You sent " + selected + " to " + user + "\n");
+                            } else {
+                                JOptionPane.showMessageDialog(
+                                        null,
+                                        "User not found",
+                                        "Error",
+                                        JOptionPane.ERROR_MESSAGE
+                                );
+                            }
+                        }else{
+                            JOptionPane.showMessageDialog(
+                                    null,
+                                    "No user selected",
+                                    "Error",
+                                    JOptionPane.ERROR_MESSAGE
+                            );
+                        }
+                    }else{
+                        JOptionPane.showMessageDialog(
+                                null,
+                                "Music not found",
                                 "Error",
                                 JOptionPane.ERROR_MESSAGE
                         );
@@ -223,10 +293,7 @@ public class ChatBox {
         hostIP.setEnabled(false);
         Thread hostThread = new Thread(() -> {
             while (isActive) {
-                String k = host.listenforClient();
-                if(k!= null) {
-                    display.append(k + "\n");
-                }
+                host.listenforClient();
             }
         });
         Thread getMessageThread = new Thread(() -> {

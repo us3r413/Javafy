@@ -18,33 +18,33 @@ public class Javafy {
             javafy.gui = new GUI();
             GUI.frame.setVisible(true);
             GUI.frame.setMinimumSize(new Dimension(900,600));
-            new Thread(() -> {
-                try {
-                    WatchService watchService = FileSystems.getDefault().newWatchService();
-                    Path path = Paths.get("music");
-                    path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE,
-                            StandardWatchEventKinds.ENTRY_DELETE,
-                            StandardWatchEventKinds.ENTRY_MODIFY);
-                    while (true) {
-                        WatchKey key = watchService.take();
-                        for (WatchEvent<?> event : key.pollEvents()) {
-                            //Path changed = (Path) event.context();
-                            if (javafy.gui.isInternalChange()) {
-                                System.out.println("Internal change detected, ignoring...");
-                                continue;
-                            }
-                            javax.swing.SwingUtilities.invokeLater(() -> {
-                                JOptionPane.showMessageDialog(null, "Change detected, please manually restart the application", "Change Detected", JOptionPane.WARNING_MESSAGE);
-                                shutDown();
-                            });
-                            return;
-                        }
-                        key.reset();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
+//            new Thread(() -> {
+//                try {
+//                    WatchService watchService = FileSystems.getDefault().newWatchService();
+//                    Path path = Paths.get("music");
+//                    path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE,
+//                            StandardWatchEventKinds.ENTRY_DELETE,
+//                            StandardWatchEventKinds.ENTRY_MODIFY);
+//                    while (true) {
+//                        WatchKey key = watchService.take();
+//                        for (WatchEvent<?> event : key.pollEvents()) {
+//                            //Path changed = (Path) event.context();
+//                            if (javafy.gui.isInternalChange()) {
+//                                System.out.println("Internal change detected, ignoring...");
+//                                continue;
+//                            }
+//                            javax.swing.SwingUtilities.invokeLater(() -> {
+//                                JOptionPane.showMessageDialog(null, "Change detected, please manually restart the application", "Change Detected", JOptionPane.WARNING_MESSAGE);
+//                                shutDown();
+//                            });
+//                            return;
+//                        }
+//                        key.reset();
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }).start();
         });
     }
     private static void shutDown(){

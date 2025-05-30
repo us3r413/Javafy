@@ -7,6 +7,7 @@ import java.util.ArrayList;
 public class Host {
     private static final int PORT = 12345;
     private String Username = "Host";
+    private String globalString = "hi";
     private ServerSocket TCPHost;
     private StringBuilder message = null;
     public ArrayList<UsersforHost> clients = null;
@@ -45,7 +46,10 @@ public class Host {
             return opt;
         }
     }
-    public String listenforClient(){
+    public int getClientCount() {
+        return clients.size();
+    }
+    public void listenforClient(){
         try {
             Socket newClient = TCPHost.accept();
             UsersforHost user = new UsersforHost(newClient);
@@ -56,18 +60,23 @@ public class Host {
                 client.getOutput().writeUTF("new");
                 client.getOutput().writeUTF(user.getUsername());
             }
+            synchronized (messageLock) {
+                message.append(user.getUsername() + " has joined the chat\n");
+            }
             clients.add(user);
             Thread read = new Thread(() -> {
                 try{
                     while (!Thread.currentThread().isInterrupted()) {
-                        String clientMessage = getClientMessage(user.getInput());
+                        String clientMessage = getClientMessage(user.getOutput(),user.getInput());
                         synchronized (messageLock) {
                             if (clientMessage.equals("code1")) {
-                                message.append("MP3 file received from " + user.getUsername() + "\n");
+                                message.append(globalString + " received from " + user.getUsername() + "\n");
+                            }else if (clientMessage.equals("code2")) {
+                                message.append(user.getUsername() + " has transferred a file through you\n");
                             } else {
                                 for(UsersforHost client : clients){
                                     if(client != user) {
-                                        client.getOutput().writeUTF(user.getUsername() + " : " + clientMessage);
+                                        client.getOutput().writeUTF(clientMessage);
                                     }
                                 }
                                 message.append(clientMessage + "\n");
@@ -75,15 +84,29 @@ public class Host {
                         }
                     }
                 }catch(Exception e){
+                    try {
+                        user.getOutput().close();
+                        user.getInput().close();
+                        user.getClientSocket().close();
+                    }catch (Exception ex) {
+                        System.err.println("Error closing client connection: " + ex.getMessage());
+                    }
+                    clients.remove(user);
+                    for(UsersforHost client : clients){
+                        try {
+                            client.getOutput().writeUTF("left");
+                            client.getOutput().writeUTF(user.getUsername());
+                        }catch(Exception ex){
+                            System.err.println("Error notifying other clients: " + ex.getMessage());
+                        }
+                    }
                     Thread.currentThread().interrupt();
                 }
             });
             read.start();
-            return user.getUsername() + " has joined the chat";
         } catch (IOException e){
             System.err.println(e.getMessage());
         }
-        return null;
     }
     public String getUsername() {
         return Username;
@@ -109,7 +132,7 @@ public class Host {
         }
         return "None";
     }
-    private String getClientMessage(DataInputStream input){//run this on a thread
+    private String getClientMessage(DataOutputStream output,DataInputStream input){//run this on a thread
         try {
             String message = input.readUTF();
             if(message.equals("MP3")){
@@ -127,7 +150,36 @@ public class Host {
                     bytesReceived += bytes;
                 }
                 fos.close();
+                globalString = filename;
                 return "code1";
+            }else if(message.equals("Transfer")){
+                System.out.println("Transfer request received");
+                String target = input.readUTF();
+                String fileName = input.readUTF();
+                long fileSize = input.readLong();
+                int targetIndex = -1;
+                int i = 0;
+                for(UsersforHost client : clients){
+                    if(client.getUsername().equals(target)){
+                        targetIndex = i;
+                        break;
+                    }
+                    i++;
+                }
+                File dir = new File("music");
+                fileName = new File(fileName).getName();
+                FileOutputStream fos = new FileOutputStream(new File(dir, fileName));
+                byte[] buffer = new byte[4096];
+                long bytesReceived = 0;
+                while (bytesReceived < fileSize) {
+                    int bytes = input.read(buffer, 0, (int) Math.min(buffer.length, fileSize - bytesReceived));
+                    if (bytes == -1) break;
+                    fos.write(buffer, 0, bytes);
+                    bytesReceived += bytes;
+                }
+                fos.close();
+                sendMP3(targetIndex, "music" + File.separator + fileName);
+                return "code2";
             }else {
                 return message;
             }
@@ -187,7 +239,6 @@ public class Host {
             byte[] buffer = new byte[(int) file.length()];
             int bytesRead = 0;
             DataOutputStream output = clients.get(index).getOutput();
-            output.writeUTF(Username+" has sent an MP3 file");
             output.writeUTF("MP3");
             output.writeUTF(file.getName());
             output.writeLong(file.length());

@@ -10,9 +10,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.awt.event.MouseAdapter;
-
+import src.UI.SVGToImageConverter;
 public class MenuBar extends JMenuBar {
     private JButton closeButton;
+    private JPanel mainPanel;
     private ImageIcon closeBeforeIcon;
     private ImageIcon closeAfterIcon;
     private JButton minimizeButton;
@@ -21,10 +22,16 @@ public class MenuBar extends JMenuBar {
     private JButton maximizeButton;
     private ImageIcon maximizeBeforeIcon;
     private ImageIcon maximizeAfterIcon;
+    private JButton reloadButton;
+    private ImageIcon reloadBeforeIcon;
+    private ImageIcon reloadAfterIcon;
     Point mouseClickPoint = new Point();
 
-    public MenuBar() {
-        setLayout(new FlowLayout(FlowLayout.LEFT));
+    public MenuBar(reload reloadAction) {
+        setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        mainPanel.setOpaque(false);
         setBackground(Color.BLACK);
         closeButton = new JButton();
         maximizeButton = new JButton();
@@ -53,7 +60,12 @@ public class MenuBar extends JMenuBar {
             scaledIcon = bufferedImage.getScaledInstance(12, 12, Image.SCALE_SMOOTH);
             minimizeAfterIcon = new ImageIcon(scaledIcon);
             minimizeButton.setIcon(minimizeAfterIcon);
-        } catch (IOException e) {
+            SVGToImageConverter converter = new SVGToImageConverter();
+            reloadBeforeIcon = new ImageIcon();
+            reloadBeforeIcon = converter.convertSVGToImage("imgs/reloadBefore.svg", 20, 20);
+            reloadAfterIcon = new ImageIcon();
+            reloadAfterIcon = converter.convertSVGToImage("imgs/reloadAfter.svg", 20, 20);
+        } catch (Exception e) {
             System.out.println("Error loading image: " + e.getMessage());
         }
         minimizeButton.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -83,12 +95,44 @@ public class MenuBar extends JMenuBar {
         closeButton.addMouseListener(new closeButtonAction());
         addMouseMotionListener(new draggableBarListener());
         addMouseListener(new draggableBarListener());
-        add(closeButton);
-        add(maximizeButton);
-        add(minimizeButton);
+
+        reloadButton = new JButton();
+        reloadButton.setIcon(reloadAfterIcon);
+        reloadButton.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        reloadButton.setContentAreaFilled(false);
+        reloadButton.setBorderPainted(false);
+        reloadButton.addActionListener(e -> {
+            reloadAction.reload();
+        });
+        reloadButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                reloadButton.setIcon(reloadBeforeIcon);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                reloadButton.setIcon(reloadAfterIcon);
+            }
+        });
+        mainPanel.add(closeButton);
+        mainPanel.add(maximizeButton);
+        mainPanel.add(minimizeButton);
+        mainPanel.setMaximumSize(mainPanel.getPreferredSize());
+        add(mainPanel);
     }
 
-
+    public void addReloadButton() {
+        add(Box.createHorizontalGlue());
+        add(reloadButton);
+        revalidate();
+        repaint();
+    }
+    public void removeReloadButton() {
+        remove(reloadButton);
+        revalidate();
+        repaint();
+    }
     private class closeButtonAction extends MouseAdapter{
         @Override
         public void mouseEntered(MouseEvent e) {
@@ -110,7 +154,6 @@ public class MenuBar extends JMenuBar {
             maximizeButton.setIcon(maximizeAfterIcon);
         }
     }
-
     private class minimizeButtonAction extends MouseAdapter{
         @Override
         public void mouseEntered(MouseEvent e) {

@@ -20,6 +20,7 @@ import src.concept.SoundTrack;
 
 public class GUI extends JFrame {
     public static JFrame frame;
+    private MenuBar menuBar;
     private JLabel name;
     private JLabel time;
     private JButton startPause;
@@ -67,6 +68,7 @@ public class GUI extends JFrame {
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
+        menuBar = new MenuBar(this::reload);
         name = new JLabel("");
         time = new JLabel("00:00 / 00:00");
         name.setPreferredSize(new Dimension(200,30));
@@ -208,6 +210,7 @@ public class GUI extends JFrame {
                 }
                 middle = chat.thisThing;
                 everything.add(middle, BorderLayout.CENTER);
+                menuBar.removeReloadButton();
                 everything.revalidate();
                 everything.repaint();
             }
@@ -219,6 +222,7 @@ public class GUI extends JFrame {
                     middle.getParent().remove(middle);
                 }
                 middle = mainList.thisThing;
+                menuBar.addReloadButton();
                 everything.add(middle, BorderLayout.CENTER);
                 everything.revalidate();
                 everything.repaint();
@@ -229,7 +233,7 @@ public class GUI extends JFrame {
         setSize(addTrack,size);
         addTrack.addActionListener(e -> {
             String trackName = JOptionPane.showInputDialog(
-                    frame, "Please Input a Name", "New Track", JOptionPane.PLAIN_MESSAGE);
+                    frame, "Please Input a Name", "New Album", JOptionPane.PLAIN_MESSAGE);
             if(trackName == null) {
                 return;
             }
@@ -248,6 +252,7 @@ public class GUI extends JFrame {
                     middle.getParent().remove(middle);
                 }
                 middle = otherTrack.get(idx).thisThing;
+                menuBar.removeReloadButton();
                 everything.add(middle, BorderLayout.CENTER);
                 everything.revalidate();
                 everything.repaint();
@@ -274,6 +279,7 @@ public class GUI extends JFrame {
                     middle.getParent().remove(middle);
                 }
                 middle = otherTrack.get(idx).thisThing;
+                menuBar.removeReloadButton();
                 everything.add(middle, BorderLayout.CENTER);
                 everything.revalidate();
                 everything.repaint();
@@ -284,7 +290,7 @@ public class GUI extends JFrame {
         sideSelctor.add(addTrack);
         sideSelctor.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         everything = new JPanel(new BorderLayout());
-        everything.add(new MenuBar(),BorderLayout.PAGE_START);
+        everything.add(menuBar,BorderLayout.PAGE_START);
         everything.add(musiControl, BorderLayout.SOUTH);
         everything.add(middle, BorderLayout.CENTER);
         everything.add(sideSelctor,BorderLayout.WEST);
@@ -425,6 +431,10 @@ public class GUI extends JFrame {
             );
         }
     }
+    private void reload(){
+        core.reload();
+        mainList.reload(core.getFullTrack(), this::loadMusic, this::addtoTrack);
+    }
     private void updateVolumeBar() {
         if (player != null) {
             if (volumeBar.getValueIsAdjusting()) {
@@ -445,8 +455,8 @@ public class GUI extends JFrame {
     }
     private void deleteTrack(SoundTrack track, JButton target){
         int response = JOptionPane.showConfirmDialog(null,
-                "Are you sure you want to delete this track?",
-                "Delete Track",
+                "Are you sure you want to delete this album?",
+                "Delete Album",
                 JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
             markChangeAsInternal();
@@ -466,7 +476,7 @@ public class GUI extends JFrame {
     }
     private String renameTrack(SoundTrack track, JButton target){
         String newName = JOptionPane.showInputDialog(
-                frame, "New name for track:", "Rename Track", JOptionPane.PLAIN_MESSAGE);
+                frame, "New name for album:", "Rename Album", JOptionPane.PLAIN_MESSAGE);
         if(newName == null) {
             return null;
         }
