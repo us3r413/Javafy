@@ -97,8 +97,7 @@ public class GUI extends JFrame {
                         latch2 = true;
                     }
                 }
-            }
-            else{
+            }else{
                 player.pause();
                 latch = true;
             }
@@ -357,11 +356,13 @@ public class GUI extends JFrame {
         player.terminate();
         initializePlayer(this.currentTrack.nextTrack());
         player.play();
+        latch2 = true;
     }
     private void playLastTrack() {
         player.terminate();
         initializePlayer(this.currentTrack.lastTrack());
         player.play();
+        latch2 = true;
     }
     public void loadMusic(Music music, SoundTrack track){
         player.terminate();
@@ -370,6 +371,7 @@ public class GUI extends JFrame {
         this.currentTrack = track;
         this.currentTrack.setIndex(this.currentTrack.musicTracks.indexOf(music));
         player.play();
+        latch2 = true;
     }
     private Icon resizeIcon(String path, int width, int height) {
         BufferedImage img = null;
